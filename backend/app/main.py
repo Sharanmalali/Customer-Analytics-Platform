@@ -59,14 +59,16 @@ def custom_openapi():
         routes=app.routes,
     )
     openapi_schema["components"]["securitySchemes"] = {
-        "BearerAuth": {
+        "OAuth2PasswordBearer": {
             "type": "http",
             "scheme": "bearer",
             "bearerFormat": "JWT",
-        }
+        },
     }
-    openapi_schema["security"] = [{"BearerAuth": []}]
+    # ✅ FIX HERE
+    openapi_schema["security"] = [{"OAuth2PasswordBearer": []}]
     app.openapi_schema = openapi_schema
     return app.openapi_schema
+
 
 app.openapi = custom_openapi
