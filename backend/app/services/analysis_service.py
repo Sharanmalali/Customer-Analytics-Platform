@@ -67,3 +67,26 @@ def run_segmentation_analysis(db: Session, dataset_id: int):
     
     # Return the DataFrame with results, which is useful for the API response.
     return df
+
+def predict_single_customer(income: float, score: float) -> int:
+    """
+    Takes a single customer's income and score, scales them, 
+    and returns the predicted cluster ID.
+    """
+    if not kmeans_model or not scaler:
+        raise RuntimeError("ML models are not available. Cannot run prediction.")
+
+    # 1. Create a DataFrame for a single input
+    data_for_prediction = pd.DataFrame([{
+        # Use the exact column names the model was trained on
+        'Annual Income (k$)': income, 
+        'Spending Score (1-100)': score
+    }])
+    
+    # 2. Scale the data using the *pre-loaded* scaler
+    X_scaled = scaler.transform(data_for_prediction)
+    
+    # 3. Predict the cluster
+    cluster_label = kmeans_model.predict(X_scaled)[0]
+    
+    return cluster_label

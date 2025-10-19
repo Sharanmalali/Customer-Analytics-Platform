@@ -149,3 +149,57 @@ def get_job_status(job_id: str, db: Session = Depends(get_db)):
     if not job:
         raise HTTPException(status_code=404, detail=f"Job {job_id} not found.")
     return job
+
+
+# --------------------------------------------------------------------
+# Endpoint 5: Live K-Means Prediction (Synchronous)
+# --------------------------------------------------------------------
+@router.post("/predict-live/", tags=["Analysis"], response_model=dict)
+def live_prediction(request: schemas.LivePredictionRequest):
+    """
+    Synchronous endpoint to get an immediate K-Means cluster prediction
+    for a single customer based on income and spending score.
+    """
+    
+    # Extract the values from the Pydantic model
+    income = request.annual_income
+    score = request.spending_score
+    
+    # The analysis_service needs a new function for single prediction
+    cluster_id = analysis_service.predict_single_customer(income, score)
+    
+    # Return the result as a simple dictionary
+    return {"predicted_cluster": int(cluster_id)}
+
+# In app/api/routes.py, add this new endpoint
+
+from typing import List
+from app.database import schemas
+
+# --------------------------------------------------------------------
+# Endpoint 6: Get Clustered Data for Visualization
+# --------------------------------------------------------------------
+@router.get(
+    "/datasets/{dataset_id}/clustered-data/", 
+    response_model=List[schemas.CustomerData],
+    tags=["Analysis"]
+)
+def get_clustered_data(dataset_id: int, db: Session = Depends(get_db)):
+    """
+    Fetches all customer data, including the assigned cluster label, 
+    for visualization purposes after an analysis job is complete.
+    """
+    # Find all customer records associated with the given dataset_id
+    customer_data = db.query(models.CustomerData).filter(
+        models.CustomerData.dataset_id == dataset_id,
+        # Only return records that have a cluster label assigned
+        models.CustomerData.cluster_label.isnot(None) 
+    ).all()
+    
+    if not customer_data:
+        raise HTTPException(
+            status_code=404, 
+            detail=f"No clustered data found for dataset ID {dataset_id}. Has an analysis job been completed?"
+        )
+    
+    return customer_data

@@ -1,0 +1,109 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f7f6;
+  display: flex;
+  justify-content: center;
+  padding: 50px 20px;
+}
+
+.container {
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  width: 100%;
+}
+
+h1 {
+  color: #333;
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+p {
+  color: #666;
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.prediction-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #555;
+}
+
+input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+button {
+  padding: 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+button:disabled {
+  background-color: #a0c3e7;
+  cursor: not-allowed;
+}
+
+/* Result Styling */
+.result-card {
+  margin-top: 30px;
+  padding: 20px;
+  border: 2px solid #28a745;
+  border-radius: 8px;
+  background-color: #eafbea;
+  text-align: center;
+}
+
+.cluster-id {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #28a745;
+  margin-bottom: 10px;
+}
+
+.segment-details h3 {
+  color: #0056b3;
+  margin-top: 10px;
+}
+
+.error-message {
+  color: #dc3545;
+  font-weight: bold;
+  border: 1px solid #dc3545;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 20px;
+}
+
+.loading-message {
+    color: #ffc107;
+    margin-top: 20px;
+    font-weight: bold;
+}

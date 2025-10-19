@@ -82,3 +82,10 @@ class AnalysisJob(BaseModel):
     created_at: datetime
     finished_at: Optional[datetime] = None
     model_config = ConfigDict(from_attributes=True)
+
+
+# In schemas.py, add this below the other BaseModels
+
+class LivePredictionRequest(BaseModel):
+    annual_income: float
+    spending_score: float
