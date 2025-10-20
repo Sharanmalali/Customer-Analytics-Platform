@@ -89,3 +89,12 @@ class AnalysisJob(BaseModel):
 class LivePredictionRequest(BaseModel):
     annual_income: float
     spending_score: float
+
+
+class DynamicAnalysisRequest(BaseModel):
+    """Schema for requesting clustering on arbitrary features from a dataset."""
+    dataset_id: int
+    features: List[str] # e.g., ["age", "spending_score"]
+    n_clusters: int = 5 # Allow user to specify k, default to 5
+    # Since we are creating clusters on the fly, we don't need a response_model for the data
+    # We will just return a status message.

@@ -203,3 +203,78 @@ def get_clustered_data(dataset_id: int, db: Session = Depends(get_db)):
         )
     
     return customer_data
+
+
+# --------------------------------------------------------------------
+# Endpoint 7: Run Dynamic K-Means Analysis
+# --------------------------------------------------------------------
+@router.post("/datasets/run-dynamic-analysis/", tags=["Analysis - Dynamic"], response_model=schemas.AnalysisJob)
+def run_dynamic_analysis_job(
+    request: schemas.DynamicAnalysisRequest, 
+    background_tasks: BackgroundTasks, 
+    db: Session = Depends(get_db)
+    # If this should be protected, you would add: current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Triggers a background analysis job to run K-Means on user-specified features (e.g., Age and Gender).
+    NOTE: This is modeled as a job to simulate a potentially long-running task.
+    """
+    dataset = db.query(models.Dataset).filter(models.Dataset.id == request.dataset_id).first()
+    if not dataset:
+        raise HTTPException(status_code=404, detail=f"Dataset ID {request.dataset_id} not found.")
+
+    new_job = models.AnalysisJob(id=f"dyn-job-{uuid.uuid4()}", dataset_id=request.dataset_id, status="queued")
+    db.add(new_job)
+    db.commit()
+    db.refresh(new_job)
+    
+    # Define a new background function for the dynamic analysis
+    def run_dynamic_background_analysis(job_id: str, dataset_id: int, features: List[str], n_clusters: int):
+        db_session: Session = SessionLocal()
+        try:
+            job = db_session.query(models.AnalysisJob).filter(models.AnalysisJob.id == job_id).first()
+            job.status = "running"
+            db_session.commit()
+
+            # Call the new service function
+            service_result = analysis_service.run_dynamic_segmentation_analysis(
+                db=db_session, 
+                dataset_id=dataset_id, 
+                features=features, 
+                n_clusters=n_clusters
+            )
+
+            # --- Summarize Results ---
+            cluster_summary = service_result['df']['cluster_label'].value_counts().to_dict()
+            analysis_results = {
+                "summary": f"Dynamic analysis complete on features: {features}.",
+                "features_used": features,
+                "n_clusters": n_clusters,
+                "cluster_distribution": {str(k): v for k, v in cluster_summary.items()}
+            }
+            
+            job.status = "completed"
+            job.results = analysis_results
+            job.finished_at = datetime.utcnow()
+            db_session.commit()
+            print(f"[{job_id}] Dynamic analysis finished successfully.")
+
+        except Exception as e:
+            print(f"[{job_id}] Dynamic analysis failed: {e}")
+            if 'job' in locals() and job:
+                job.status = "failed"
+                job.results = {"error": str(e), "features_attempted": features}
+                job.finished_at = datetime.utcnow()
+                db_session.commit()
+        finally:
+            db_session.close()
+
+    background_tasks.add_task(
+        run_dynamic_background_analysis, 
+        job_id=new_job.id, 
+        dataset_id=request.dataset_id, 
+        features=request.features, 
+        n_clusters=request.n_clusters
+    )
+    
+    return new_job
